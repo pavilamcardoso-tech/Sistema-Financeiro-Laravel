@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-4 text-center">
-        <h2 class="text-2xl font-bold text-gray-800">💰 Controle Financeiro</h2>
+        <h2 class="text-2xl font-bold text-gray-800"> Controle Financeiro</h2>
         <p class="text-gray-500 mt-1">Faça login para acessar sua conta</p>
     </div>
 

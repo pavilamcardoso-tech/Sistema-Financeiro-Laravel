@@ -1,80 +1,68 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            💰 Dashboard Financeiro
-        </h2>
-    </x-slot>
+    <x-slot name="header">Dashboard</x-slot>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px; font-weight: 500;">TOTAL RECEITAS</p>
+            <p style="font-size: 28px; font-weight: 700;">R$ {{ number_format($income, 2, ',', '.') }}</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px; font-weight: 500;">TOTAL DESPESAS</p>
+            <p style="font-size: 28px; font-weight: 700;">R$ {{ number_format($expense, 2, ',', '.') }}</p>
+        </div>
+        <div style="background: {{ $balance >= 0 ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'linear-gradient(135deg, #f59e0b, #d97706)' }}; color: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px; font-weight: 500;">SALDO ATUAL</p>
+            <p style="font-size: 28px; font-weight: 700;">R$ {{ number_format($balance, 2, ',', '.') }}</p>
+        </div>
+    </div>
 
-            @if(session('success'))
-                <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
+    <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; margin-bottom: 24px;">
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.07);">
+            <h3 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">Receitas x Despesas por Mês</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.07);">
+            <h3 style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">Distribuição</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
 
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-green-500 text-white rounded-lg p-4 shadow">
-                    <p class="text-sm">Total Receitas</p>
-                    <p class="text-2xl font-bold">R$ {{ number_format($income, 2, ',', '.') }}</p>
-                </div>
-                <div class="bg-red-500 text-white rounded-lg p-4 shadow">
-                    <p class="text-sm">Total Despesas</p>
-                    <p class="text-2xl font-bold">R$ {{ number_format($expense, 2, ',', '.') }}</p>
-                </div>
-                <div class="{{ $balance >= 0 ? 'bg-blue-500' : 'bg-yellow-500' }} text-white rounded-lg p-4 shadow">
-                    <p class="text-sm">Saldo</p>
-                    <p class="text-2xl font-bold">R$ {{ number_format($balance, 2, ',', '.') }}</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="col-span-2 bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Receitas x Despesas por Mês</h3>
-                    <canvas id="barChart"></canvas>
-                </div>
-                <div class="bg-white rounded-lg shadow p-4">
-                    <h3 class="font-semibold mb-2">Distribuição</h3>
-                    <canvas id="pieChart"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex justify-between mb-4">
-                    <h3 class="font-semibold">Últimas Transações</h3>
-                    <a href="/transactions" class="text-blue-500 text-sm">Ver todas →</a>
-                </div>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-2">Data</th>
-                            <th class="text-left py-2">Descrição</th>
-                            <th class="text-left py-2">Categoria</th>
-                            <th class="text-left py-2">Tipo</th>
-                            <th class="text-left py-2">Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($transactions as $t)
-                        <tr class="border-b">
-                            <td class="py-2">{{ \Carbon\Carbon::parse($t->date)->format('d/m/Y') }}</td>
-                            <td class="py-2">{{ $t->description }}</td>
-                            <td class="py-2">{{ $t->category->name }}</td>
-                            <td class="py-2">
-                                <span class="px-2 py-1 rounded text-white text-xs {{ $t->type == 'income' ? 'bg-green-500' : 'bg-red-500' }}">
-                                    {{ $t->type == 'income' ? 'Receita' : 'Despesa' }}
-                                </span>
-                            </td>
-                            <td class="py-2">R$ {{ number_format($t->amount, 2, ',', '.') }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="5" class="text-center py-4 text-gray-400">Nenhuma transação ainda.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
+    <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.07);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 15px; font-weight: 600; color: #1e293b;">Últimas Transações</h3>
+            <a href="/transactions" style="font-size: 13px; color: #3b82f6; text-decoration: none; font-weight: 500;">Ver todas →</a>
+        </div>
+        <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #f1f5f9;">
+                    <th style="text-align: left; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 12px;">DATA</th>
+                    <th style="text-align: left; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 12px;">DESCRIÇÃO</th>
+                    <th style="text-align: left; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 12px;">CATEGORIA</th>
+                    <th style="text-align: left; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 12px;">TIPO</th>
+                    <th style="text-align: right; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 12px;">VALOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($transactions as $t)
+                <tr style="border-bottom: 1px solid #f8fafc;">
+                    <td style="padding: 12px; color: #64748b;">{{ \Carbon\Carbon::parse($t->date)->format('d/m/Y') }}</td>
+                    <td style="padding: 12px; color: #1e293b; font-weight: 500;">{{ $t->description }}</td>
+                    <td style="padding: 12px; color: #64748b;">{{ $t->category->name }}</td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: {{ $t->type == 'income' ? '#dcfce7' : '#fee2e2' }}; color: {{ $t->type == 'income' ? '#16a34a' : '#dc2626' }};">
+                            {{ $t->type == 'income' ? 'Receita' : 'Despesa' }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: right; font-weight: 600; color: {{ $t->type == 'income' ? '#16a34a' : '#dc2626' }};">
+                        R$ {{ number_format($t->amount, 2, ',', '.') }}
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="5" style="padding: 32px; text-align: center; color: #94a3b8;">Nenhuma transação ainda.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
         </div>
     </div>
 
@@ -89,20 +77,20 @@
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Receitas', data: incomeData, backgroundColor: 'rgba(40, 167, 69, 0.7)' },
-                    { label: 'Despesas', data: expenseData, backgroundColor: 'rgba(220, 53, 69, 0.7)' }
+                    { label: 'Receitas', data: incomeData, backgroundColor: '#10b981', borderRadius: 4 },
+                    { label: 'Despesas', data: expenseData, backgroundColor: '#ef4444', borderRadius: 4 }
                 ]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
         });
 
         new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Receitas', 'Despesas'],
-                datasets: [{ data: [{{ $income }}, {{ $expense }}], backgroundColor: ['rgba(40, 167, 69, 0.7)', 'rgba(220, 53, 69, 0.7)'] }]
+                datasets: [{ data: [{{ $income }}, {{ $expense }}], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
             },
-            options: { responsive: true }
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
         });
     </script>
 </x-app-layout>
