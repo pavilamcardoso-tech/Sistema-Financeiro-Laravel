@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::where('user_id', Auth::id())->get();
         return view('categories.index', compact('categories'));
     }
 
@@ -19,45 +20,53 @@ class CategoryController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|min:2|max:50',
-        'type' => 'required|in:income,expense',
-    ], [
-        'name.required' => 'O nome é obrigatório.',
-        'name.min' => 'O nome deve ter pelo menos 2 caracteres.',
-        'name.max' => 'O nome deve ter no máximo 50 caracteres.',
-        'type.required' => 'O tipo é obrigatório.',
-    ]);
+    {
+        $request->validate([
+            'name' => 'required|min:2|max:50',
+            'type' => 'required|in:income,expense',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.min' => 'O nome deve ter pelo menos 2 caracteres.',
+            'name.max' => 'O nome deve ter no máximo 50 caracteres.',
+            'type.required' => 'O tipo é obrigatório.',
+        ]);
 
-    Category::create($request->only('name', 'type'));
-    return redirect('/categories')->with('success', 'Categoria criada com sucesso!');
-}
+        Category::create([
+            'user_id' => Auth::id(),
+            'name' => $request->name,
+            'type' => $request->type,
+        ]);
 
-public function update(Request $request, Category $category)
-{
-    $request->validate([
-        'name' => 'required|min:2|max:50',
-        'type' => 'required|in:income,expense',
-    ], [
-        'name.required' => 'O nome é obrigatório.',
-        'name.min' => 'O nome deve ter pelo menos 2 caracteres.',
-        'name.max' => 'O nome deve ter no máximo 50 caracteres.',
-        'type.required' => 'O tipo é obrigatório.',
-    ]);
-
-    $category->update($request->only('name', 'type'));
-    return redirect('/categories')->with('success', 'Categoria atualizada com sucesso!');
-}
+        return redirect('/categories')->with('success', 'Categoria criada com sucesso!');
+    }
 
     public function edit(Category $category)
     {
+        abort_if($category->user_id !== Auth::id(), 403);
         return view('categories.edit', compact('category'));
     }
 
+    public function update(Request $request, Category $category)
+    {
+        abort_if($category->user_id !== Auth::id(), 403);
+
+        $request->validate([
+            'name' => 'required|min:2|max:50',
+            'type' => 'required|in:income,expense',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.min' => 'O nome deve ter pelo menos 2 caracteres.',
+            'name.max' => 'O nome deve ter no máximo 50 caracteres.',
+            'type.required' => 'O tipo é obrigatório.',
+        ]);
+
+        $category->update($request->only('name', 'type'));
+        return redirect('/categories')->with('success', 'Categoria atualizada com sucesso!');
+    }
 
     public function destroy(Category $category)
     {
+        abort_if($category->user_id !== Auth::id(), 403);
         $category->delete();
         return redirect('/categories')->with('success', 'Categoria deletada com sucesso!');
     }
